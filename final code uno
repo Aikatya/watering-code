@@ -1,6 +1,6 @@
 int sensorPin = A0; 
 int sensorValue=0;  
-int limit = 100; 
+int limit = 300; 
 const int RELAY_PIN = 3;  
 #include <LiquidCrystal.h>
 
@@ -20,22 +20,21 @@ void setup() {
 void loop() {  
   sensorValue = analogRead(sensorPin); 
 
-  Serial.println("Analog Value : " + (String)sensorValue );
    digitalWrite(3, HIGH);
   if (sensorValue>limit) {
     digitalWrite(3, HIGH); 
     digitalWrite(RELAY_PIN, HIGH); // turn on pump 5 seconds
   delay(5000);
     digitalWrite(RELAY_PIN, LOW);  // turn off pump 5 seconds
-  delay(5000);
+  delay(10000);
   }
   else {
     digitalWrite(3, LOW);
     digitalWrite(RELAY_PIN, LOW);  // turn off pump 5 seconds
-  delay(5000);
+  delay(10000);
    } 
   lcd.clear();
   lcd.print("Moisture: ");
   lcd.print(sensorValue);
-  delay(5000); 
+  delay(10000); 
 }
