@@ -1,0 +1,88 @@
+int sensorPin = A0; 
+int sensorValue=0;  
+const int RELAY_PIN = A5;  
+int skipCycles = 0;
+bool operation = 0;
+int previousMoisture = 800;
+
+void setup() {
+  pinMode(RELAY_PIN, OUTPUT);
+  
+  pinMode(sensorPin, INPUT);
+  Serial.begin(9600);
+}
+
+int setSkipCycles(){
+  skipCycles=1000;
+  return(skipCycles);
+}
+
+bool watering(int sensorValue){
+  Serial.println("watering");
+  
+  if (sensorValue<80){
+    operation=0;
+    return(operation);
+  }
+  else{
+    previousMoisture=sensorValue;
+    digitalWrite(RELAY_PIN, LOW); // turn on pump 7 seconds
+    delay(7000);
+    digitalWrite(RELAY_PIN, HIGH);  // turn off pump 5 seconds
+    delay(20000);
+    int newValue = analogRead(sensorPin);
+    
+    if (previousMoisture<=newValue){
+      setSkipCycles();
+      operation=0;
+      Serial.println("error detected");
+      return(operation);
+    }
+    return(operation);
+  }
+}
+
+bool waiting(int sensorValue){
+  Serial.println("not watering");
+   if (sensorValue>120){
+    operation=1;
+    return(operation);
+  }
+  delay(20000);
+  return(operation);
+}
+
+void loop() {  
+
+  digitalWrite(RELAY_PIN, HIGH);
+  delay(20000);
+   
+  if (skipCycles>0){
+    skipCycles--;
+    Serial.println("pump not working");
+    Serial.println("skips left:");        
+    Serial.println(skipCycles);                                                                            
+    return;
+  }
+  
+  sensorValue = analogRead(sensorPin); 
+
+  if (sensorValue>800) {
+    Serial.println("Sensor not ok");
+    Serial.println("resistance high");
+    digitalWrite (RELAY_PIN, HIGH);
+    delay (5000);
+    return;
+  }
+  
+  Serial.println("Moisture: ");
+  Serial.println(sensorValue);
+  
+  if (operation) {
+    watering(sensorValue);
+  }
+ 
+  else {
+    waiting(sensorValue);
+  }   
+}
