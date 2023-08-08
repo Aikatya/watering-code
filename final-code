@@ -1,0 +1,103 @@
+int sensorPin = A0; 
+int sensorValue=0;  
+const int RELAY_PIN = A5;  
+int skipCycles = 0;
+bool operation = 0;
+int previousMoisture = 800;
+#include <LiquidCrystal.h>
+
+const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+void setup() {
+  pinMode(RELAY_PIN, OUTPUT);
+ 
+  // set up the LCD's number of columns and rows:
+  lcd.begin(16, 2);
+  
+  pinMode(sensorPin, INPUT);
+  Serial.begin(9600);
+}
+
+int setSkipCycles(){
+  skipCycles=1000;
+  return(skipCycles);
+}
+
+bool watering(int sensorValue){
+  lcd.setCursor(0,1);
+  lcd.print("watering");
+  
+  if (sensorValue<80){
+    operation=0;
+    return(operation);
+  }
+  else{
+    previousMoisture=sensorValue;
+    digitalWrite(RELAY_PIN, LOW); // turn on pump 7 seconds
+    delay(7000);
+    digitalWrite(RELAY_PIN, HIGH);  // turn off pump 5 seconds
+    delay(20000);
+    int newValue = analogRead(sensorPin);
+    
+    if (previousMoisture<=newValue){
+      setSkipCycles();
+      operation=0;
+      lcd.clear();
+      lcd.print("error detected");
+      return(operation);
+    }
+    return(operation);
+  }
+}
+
+bool waiting(int sensorValue){
+  lcd.setCursor(0,1);
+  lcd.print("not watering");
+   if (sensorValue>120){
+    operation=1;
+    return(operation);
+  }
+  delay(20000);
+  return(operation);
+}
+
+void loop() {  
+
+  digitalWrite(RELAY_PIN, HIGH);
+  delay(20000);
+   
+  if (skipCycles>0){
+    skipCycles--;
+    lcd.clear();
+    lcd.print("pump not working");
+    lcd.setCursor(0,1);
+    lcd.print("skips left:");        
+    lcd.print(skipCycles);                                                                            
+    return;
+  }
+  
+  sensorValue = analogRead(sensorPin); 
+
+  if (sensorValue>800) {
+    lcd.clear();
+    lcd.print("Sensor not ok");
+    lcd.setCursor(0,1);
+    lcd.print("resistance high");
+    digitalWrite (RELAY_PIN, HIGH);
+    delay (5000);
+    return;
+  }
+  
+  lcd.clear();
+  lcd.print("Moisture: ");
+  lcd.print(sensorValue);
+  
+  if (operation) {
+    watering(sensorValue);
+  }
+ 
+  else {
+    waiting(sensorValue);
+  }   
+}
